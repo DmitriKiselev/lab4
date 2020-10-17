@@ -36,10 +36,11 @@ def write(db_path, key_path, period):
 
     start = time.time()
     # generate key
-    key = Fernet.generate_key()
+    key = Fernet.generate_key().decode(encoding="utf-8")
+    dict = {'key': key}
     # saving key
     with open(key_path, 'w') as outfile:
-        json.dump(key.decode(encoding="utf-8"), outfile)
+        json.dump(dict, outfile)
     f = Fernet(key)
     while 1:
         if time.time() - start == period:
@@ -60,13 +61,14 @@ def write(db_path, key_path, period):
                                                     10)).encode("utf-8"))
             fuel_sensor = f.encrypt(str(np.random.uniform(0, 45)).encode
                                     ("utf-8"))
-            print(fuel_sensor)
             # saving ecrypted data
-            data = (pressure_sensor.decode("utf-8"), t1_sensor, t2_sensor,
+            data = (pressure_sensor, t1_sensor, t2_sensor,
                     co2_sensor,
                     humidity_sensor, distance_sensor, fuel_sensor)
+            print('Data generated')
             cursor.execute(sql, data)
             conn.commit()
+            start = time.time()
 
 
 def get_args():
@@ -75,7 +77,7 @@ def get_args():
     parser.add_argument('--db_path',default='data.db', help='Path for db file')
     parser.add_argument('--key_path', default='key.json',
                         help='Path for json with generated key')
-    parser.add_argument('--period', default=10,
+    parser.add_argument('--period', default=5,
                         help='Period of generation new data (in seconds)')
     return parser.parse_args()
 
